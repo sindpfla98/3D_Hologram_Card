@@ -1,5 +1,7 @@
 const cardContainer = document.getElementById('cardContainer');
 const hologram = document.getElementById('hologram');
+const powerValue = document.querySelector('.stat-value'); // Like 숫자
+let powerCount = parseInt(powerValue.textContent); // 초기값 0
 
 let currentX = 0, currentY = 0;
 let targetX = 0, targetY = 0;
@@ -18,6 +20,10 @@ if (!isMobile) {
         targetX = (y - centerY) / 10;
         targetY = (centerX - x) / 10;
 
+        // 회전 제한
+        targetX = Math.max(Math.min(targetX, 20), -20);
+        targetY = Math.max(Math.min(targetY, 20), -20);
+
         const percentX = (x / rect.width) * 100;
         const percentY = (y / rect.height) * 100;
         hologram.style.setProperty('--x', percentX + '%');
@@ -30,7 +36,7 @@ if (!isMobile) {
     });
 }
 
-// === 모바일 터치 ===
+// === 모바일 터치 드래그 ===
 if (isMobile) {
     let isTouching = false;
     let touchStartX = 0;
@@ -53,6 +59,10 @@ if (isMobile) {
         targetY += deltaX / 10;
         targetX -= deltaY / 10;
 
+        // 회전 제한
+        targetX = Math.max(Math.min(targetX, 20), -20);
+        targetY = Math.max(Math.min(targetY, 20), -20);
+
         const rect = cardContainer.getBoundingClientRect();
         const percentX = ((touchX - rect.left) / rect.width) * 100;
         const percentY = ((touchY - rect.top) / rect.height) * 100;
@@ -65,41 +75,10 @@ if (isMobile) {
 
     cardContainer.addEventListener('touchend', () => {
         isTouching = false;
+        // 터치 끝나면 원위치
+        targetX = 0;
+        targetY = 0;
     });
-
-    // === 기울기 센서 누적 방식 ===
-    let lastBeta = null;
-    let lastGamma = null;
-
-    function enableMotion() {
-        if (window.DeviceOrientationEvent) {
-            window.addEventListener('deviceorientation', (e) => {
-                const { beta, gamma } = e;
-
-                if (lastBeta !== null && lastGamma !== null) {
-                    // 변화량 누적
-                    const deltaX = beta - lastBeta;
-                    const deltaY = gamma - lastGamma;
-
-                    targetX += deltaX / 5; // 민감도
-                    targetY += deltaY / 5;
-                }
-
-                lastBeta = beta;
-                lastGamma = gamma;
-            });
-        }
-    }
-
-    if (typeof DeviceOrientationEvent !== 'undefined' &&
-        typeof DeviceOrientationEvent.requestPermission === 'function') {
-        // iOS
-        DeviceOrientationEvent.requestPermission()
-            .then(res => { if (res === 'granted') enableMotion(); })
-            .catch(console.log);
-    } else {
-        enableMotion();
-    }
 }
 
 // === 부드러운 애니메이션 ===
@@ -112,15 +91,16 @@ function animate() {
         rotateY(${currentY}deg)
         scale3d(1.05, 1.05, 1.05)
     `;
+
     requestAnimationFrame(animate);
 }
 animate();
 
-const powerValue = document.querySelector('.stat-value'); // Power 숫자
-let powerCount = parseInt(powerValue.textContent); // 초기값 99
+// === 버튼 클릭: LIKE ME + Like 증가 + 하트 ===
+document.querySelector('.card-button').textContent = 'LIKE ME';
 
 document.querySelector('.card-button').addEventListener('click', function() {
-    // 버튼 클릭 시 Power 증가
+    // Like 증가
     powerCount += 1;
     powerValue.textContent = powerCount;
 
