@@ -1,56 +1,93 @@
 const cardContainer = document.getElementById('cardContainer');
 const hologram = document.getElementById('hologram');
-const motionButton = document.getElementById('motionButton');
 
 let currentX = 0, currentY = 0;
 let targetX = 0, targetY = 0;
 
-// === PC 마우스 이벤트 ===
-cardContainer.addEventListener('mousemove', (e) => {
-    const rect = cardContainer.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
+const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    targetX = (y - centerY) / 10;
-    targetY = (centerX - x) / 10;
+// === PC 마우스 ===
+if (!isMobile) {
+    cardContainer.addEventListener('mousemove', (e) => {
+        const rect = cardContainer.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
 
-    const percentX = (x / rect.width) * 100;
-    const percentY = (y / rect.height) * 100;
-    hologram.style.setProperty('--x', percentX + '%');
-    hologram.style.setProperty('--y', percentY + '%');
-});
+        targetX = (y - centerY) / 10;
+        targetY = (centerX - x) / 10;
 
-cardContainer.addEventListener('mouseleave', () => {
-    targetX = 0;
-    targetY = 0;
-});
+        const percentX = (x / rect.width) * 100;
+        const percentY = (y / rect.height) * 100;
+        hologram.style.setProperty('--x', percentX + '%');
+        hologram.style.setProperty('--y', percentY + '%');
+    });
 
-// === 모바일 기울기 이벤트 ===
-function enableMotion() {
-    if (window.DeviceOrientationEvent) {
-        window.addEventListener('deviceorientation', (e) => {
-            const { beta, gamma } = e;
-            targetX = beta / 5;
-            targetY = gamma / 5;
-        });
-    }
+    cardContainer.addEventListener('mouseleave', () => {
+        targetX = 0;
+        targetY = 0;
+    });
 }
 
-// iOS 권한 요청
-motionButton.addEventListener('click', async () => {
-    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-        const res = await DeviceOrientationEvent.requestPermission();
-        if (res === 'granted') {
-            motionButton.style.display = 'none';
-            enableMotion();
+// === 모바일 터치 ===
+if (isMobile) {
+    let isTouching = false;
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    cardContainer.addEventListener('touchstart', (e) => {
+        isTouching = true;
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+    });
+
+    cardContainer.addEventListener('touchmove', (e) => {
+        if (!isTouching) return;
+        const touchX = e.touches[0].clientX;
+        const touchY = e.touches[0].clientY;
+
+        const deltaX = touchX - touchStartX;
+        const deltaY = touchY - touchStartY;
+
+        targetY += deltaX / 10;
+        targetX -= deltaY / 10;
+
+        const rect = cardContainer.getBoundingClientRect();
+        const percentX = ((touchX - rect.left) / rect.width) * 100;
+        const percentY = ((touchY - rect.top) / rect.height) * 100;
+        hologram.style.setProperty('--x', percentX + '%');
+        hologram.style.setProperty('--y', percentY + '%');
+
+        touchStartX = touchX;
+        touchStartY = touchY;
+    });
+
+    cardContainer.addEventListener('touchend', () => {
+        isTouching = false;
+    });
+
+    // === 기울기 센서 ===
+    function enableMotion() {
+        if (window.DeviceOrientationEvent) {
+            window.addEventListener('deviceorientation', (e) => {
+                const { beta, gamma } = e;
+                targetX = beta / 5;
+                targetY = gamma / 5;
+            });
         }
+    }
+
+    if (typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function') {
+        // iOS
+        DeviceOrientationEvent.requestPermission()
+            .then(res => { if (res === 'granted') enableMotion(); })
+            .catch(console.log);
     } else {
-        motionButton.style.display = 'none';
         enableMotion();
     }
-});
+}
 
 // === 부드러운 애니메이션 ===
 function animate() {
