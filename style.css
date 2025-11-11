@@ -41,6 +41,9 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.2);
     overflow: hidden;
     transform-style: preserve-3d;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .card::before {
@@ -93,12 +96,22 @@ body {
     position: relative;
     z-index: 1;
     transform: translateZ(50px);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+}
+
+.card-top {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .card-icon {
     width: 100px;
     height: 100px;
-    margin: 0 auto 30px;
+    margin-bottom: 20px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 20px;
     display: flex;
@@ -110,12 +123,8 @@ body {
 }
 
 @keyframes float {
-    0%, 100% {
-        transform: translateY(0px) translateZ(50px);
-    }
-    50% {
-        transform: translateY(-10px) translateZ(50px);
-    }
+    0%, 100% { transform: translateY(0px) translateZ(50px); }
+    50% { transform: translateY(-10px) translateZ(50px); }
 }
 
 .card-title {
@@ -123,7 +132,7 @@ body {
     font-weight: bold;
     color: #fff;
     text-align: center;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     text-shadow: 0 0 20px rgba(147, 51, 234, 0.5);
 }
 
@@ -131,22 +140,22 @@ body {
     font-size: 16px;
     color: rgba(255, 255, 255, 0.7);
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 15px;
     letter-spacing: 2px;
 }
 
 .card-description {
     font-size: 14px;
-    line-height: 1.8;
+    line-height: 1.6;
     color: rgba(255, 255, 255, 0.8);
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
 }
 
 .card-stats {
     display: flex;
     justify-content: space-around;
-    margin-top: 30px;
+    margin-bottom: 20px;
 }
 
 .stat {
@@ -171,8 +180,7 @@ body {
 .card-button {
     display: block;
     width: 100%;
-    padding: 15px;
-    margin-top: 30px;
+    padding: 12px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border: none;
     border-radius: 10px;
@@ -183,6 +191,7 @@ body {
     transition: all 0.3s;
     box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
     transform: translateZ(30px);
+    min-height: 40px;
 }
 
 .card-button:hover {
@@ -208,31 +217,19 @@ body {
 }
 
 @keyframes heart-float {
-    0% {
-        transform: translateY(0) scale(0) rotate(0deg);
-        opacity: 1;
-    }
-    50% {
-        transform: translateY(-100px) scale(1) rotate(180deg);
-        opacity: 1;
-    }
-    100% {
-        transform: translateY(-200px) scale(0.5) rotate(360deg);
-        opacity: 0;
-    }
+    0% { transform: translateY(0) scale(0) rotate(0deg); opacity: 1; }
+    50% { transform: translateY(-100px) scale(1) rotate(180deg); opacity: 1; }
+    100% { transform: translateY(-200px) scale(0.5) rotate(360deg); opacity: 0; }
 }
 
-#motionButton {
-    position: fixed;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(255, 255, 255, 0.2);
-    color: #fff;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    backdrop-filter: blur(5px);
-    cursor: pointer;
-    font-size: 14px;
+/* 모바일 최적화 */
+@media (max-width: 480px) {
+    .card-container { width: 300px; height: 460px; }
+    .card-icon { width: 80px; height: 80px; font-size: 40px; margin-bottom: 15px; }
+    .card-title { font-size: 26px; }
+    .card-subtitle { font-size: 14px; }
+    .card-description { font-size: 12px; margin-bottom: 15px; }
+    .stat-value { font-size: 22px; }
+    .stat-label { font-size: 10px; }
+    .card-button { padding: 10px; font-size: 14px; min-height: 36px; }
 }
