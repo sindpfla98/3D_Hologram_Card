@@ -67,13 +67,26 @@ if (isMobile) {
         isTouching = false;
     });
 
-    // === 기울기 센서 ===
+    // === 기울기 센서 누적 방식 ===
+    let lastBeta = null;
+    let lastGamma = null;
+
     function enableMotion() {
         if (window.DeviceOrientationEvent) {
             window.addEventListener('deviceorientation', (e) => {
                 const { beta, gamma } = e;
-                targetX = beta / 5;
-                targetY = gamma / 5;
+
+                if (lastBeta !== null && lastGamma !== null) {
+                    // 변화량 누적
+                    const deltaX = beta - lastBeta;
+                    const deltaY = gamma - lastGamma;
+
+                    targetX += deltaX / 5; // 민감도
+                    targetY += deltaY / 5;
+                }
+
+                lastBeta = beta;
+                lastGamma = gamma;
             });
         }
     }
