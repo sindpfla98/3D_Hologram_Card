@@ -18,10 +18,6 @@ if (!isMobile) {
         targetX = (y - centerY) / 10;
         targetY = (centerX - x) / 10;
 
-        // 회전 제한 (뒤집힘 방지)
-        targetX = Math.max(Math.min(targetX, 20), -20);
-        targetY = Math.max(Math.min(targetY, 20), -20);
-
         const percentX = (x / rect.width) * 100;
         const percentY = (y / rect.height) * 100;
         hologram.style.setProperty('--x', percentX + '%');
@@ -34,7 +30,7 @@ if (!isMobile) {
     });
 }
 
-// === 모바일 터치 드래그 ===
+// === 모바일 터치 ===
 if (isMobile) {
     let isTouching = false;
     let touchStartX = 0;
@@ -57,10 +53,6 @@ if (isMobile) {
         targetY += deltaX / 10;
         targetX -= deltaY / 10;
 
-        // 회전 제한
-        targetX = Math.max(Math.min(targetX, 20), -20);
-        targetY = Math.max(Math.min(targetY, 20), -20);
-
         const rect = cardContainer.getBoundingClientRect();
         const percentX = ((touchX - rect.left) / rect.width) * 100;
         const percentY = ((touchY - rect.top) / rect.height) * 100;
@@ -73,10 +65,41 @@ if (isMobile) {
 
     cardContainer.addEventListener('touchend', () => {
         isTouching = false;
-        // 터치 끝나면 원래 위치로 돌아감
-        targetX = 0;
-        targetY = 0;
     });
+
+    // === 기울기 센서 누적 방식 ===
+    let lastBeta = null;
+    let lastGamma = null;
+
+    function enableMotion() {
+        if (window.DeviceOrientationEvent) {
+            window.addEventListener('deviceorientation', (e) => {
+                const { beta, gamma } = e;
+
+                if (lastBeta !== null && lastGamma !== null) {
+                    // 변화량 누적
+                    const deltaX = beta - lastBeta;
+                    const deltaY = gamma - lastGamma;
+
+                    targetX += deltaX / 5; // 민감도
+                    targetY += deltaY / 5;
+                }
+
+                lastBeta = beta;
+                lastGamma = gamma;
+            });
+        }
+    }
+
+    if (typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function') {
+        // iOS
+        DeviceOrientationEvent.requestPermission()
+            .then(res => { if (res === 'granted') enableMotion(); })
+            .catch(console.log);
+    } else {
+        enableMotion();
+    }
 }
 
 // === 부드러운 애니메이션 ===
@@ -93,13 +116,21 @@ function animate() {
 }
 animate();
 
-// === 버튼 클릭 하트 ===
+const powerValue = document.querySelector('.stat-value'); // Power 숫자
+let powerCount = parseInt(powerValue.textContent); // 초기값 99
+
 document.querySelector('.card-button').addEventListener('click', function() {
+    // 버튼 클릭 시 Power 증가
+    powerCount += 1;
+    powerValue.textContent = powerCount;
+
+    // 버튼 클릭 애니메이션
     this.style.transform = 'translateZ(30px) scale(0.95)';
     setTimeout(() => {
         this.style.transform = 'translateZ(30px) translateY(-2px)';
     }, 100);
 
+    // 하트 파티클
     const buttonRect = this.getBoundingClientRect();
     const heart = document.createElement('div');
     heart.className = 'heart-particle';
